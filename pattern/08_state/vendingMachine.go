@@ -16,13 +16,13 @@ type vendingMachine struct {
 	// Благодаря тому, что объекты состояний будут иметь общий интерфейс,
 	// контекст сможет делегировать работу состоянию, не привязываясь к его классу (типу).
 	// Поведение контекста можно будет изменить в любой момент, подключив к нему другой объект-состояние.
-	hasItem       state
-	itemRequested state
+	hasItem       state // vendingMachine будет хранить ссылки на все объекты-состояния, но делегировать работу
+	itemRequested state // будет тому из них, кто сейчас находится в currentState
 	hasMoney      state
 	noItem        state
 
-	currentState state
-
+	currentState state // В зависимости от значения currentState, одни и те же методы, вызванные у vendingMachine будут производить разные действия
+	// Именно к объекту, который сейчас находится в currentState, vendingMachine будет перенаправлять запросы
 	itemCount int
 	itemPrice int
 }
@@ -74,8 +74,8 @@ func (v *vendingMachine) dispenseItem() error {
 	return v.currentState.dispenseItem()
 }
 
-func (v *vendingMachine) setState(s state) {
-	v.currentState = s
+func (v *vendingMachine) setState(s state) { // Объекты-состояния будут вызывать этот метод vendingMachine, после того как сами отработали,
+	v.currentState = s						 // чтобы сменить состояние vendingMachine.
 }
 
 func (v *vendingMachine) incrementItemCount(count int) {

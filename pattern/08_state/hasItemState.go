@@ -14,7 +14,7 @@ func (i *hasItemState) requestItem() error {
 		return fmt.Errorf("No item present")
 	}
 	fmt.Printf("Item requestd\n")
-	i.vendingMachine.setState(i.vendingMachine.itemRequested)
+	i.vendingMachine.setState(i.vendingMachine.itemRequested) // Происходит смена состояния
 	return nil
 }
 

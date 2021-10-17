@@ -86,8 +86,7 @@ type perimeterCalculatorVisitor struct {
 }
 
 func (a *perimeterCalculatorVisitor) visitForSquare(s *square) {
-	// Calculate middle point coordinates for square.
-	// Then assign in to the x and y instance variable.
+
 	fmt.Println("Calculating middle point coordinates for square")
 }
 
