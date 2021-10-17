@@ -20,36 +20,36 @@
 package main
 
 import (
-"fmt"
-"sort"
-"strings"
+	"fmt"
+	"sort"
+	"strings"
 )
 
-// SortCharsInWord сортирует символы в слове
+// SortCharsInWord сортирует символы в слове в алфавитном порядке
 func SortCharsInWord(s string) string {
-	s = strings.ToLower(s) // Приводим все символы в слове к нижнему регистру
-	container := strings.Split(s, "") // Разбиваем слово на отдельные буквы, ...
-	sort.Strings(container) // ... сортируем буквы из слова, ...
+	s = strings.ToLower(s)             // Приводим все символы в слове к нижнему регистру
+	container := strings.Split(s, "")  // Разбиваем слово на отдельные буквы, ...
+	sort.Strings(container)            // ... сортируем буквы из слова, ...
 	return strings.Join(container, "") // ... а затем соединяем буквы обратно в слово.
 }
 
-// BuiltSet формирует слайс только из уникальных значений
-func BuiltSet(bucket []string) []string {
-	// Реализовали set
-	set := make(map[string]bool)
-	var setToSlice []string
-	for _, v := range bucket {
+// CreateSet формирует слайс только из уникальных значений (формирует множество)
+func CreateSet(temp []string) []string {
+	// На вход CreateSet передаётся слайс строк, в котором значения элементов могут совпадать
+	mapSet := make(map[string]bool)
+	var sliceSet []string
+	for _, v := range temp { // перебираем элементы слайса
 		v = strings.ToLower(v)
-		set[v] = true
+		mapSet[v] = true // добавляем элемент булевого типа в мапу по ключу - элементу слайса (слову)
 	}
-	for i := range set {
-		setToSlice = append(setToSlice, i)
+	for i := range mapSet {
+		sliceSet = append(sliceSet, i)
 	}
-	sort.Strings(setToSlice)
-	return setToSlice
+	sort.Strings(sliceSet)
+	return sliceSet
 }
 
-// Функция printAnagrams предназначена для красивой печати
+// Функция printAnagrams печатает содержимое получившейся мапы в форматированном виде
 func printAnagrams(bucket map[string][]string) {
 	for k, v := range bucket {
 		fmt.Printf("%v : %v\n", k, v)
@@ -58,30 +58,31 @@ func printAnagrams(bucket map[string][]string) {
 
 // FindAnagrams ищет анаграммы в исходном массиве, возвращает мапу множеств анаграмм
 func FindAnagrams(arr []string) map[string][]string {
-	bucket := make(map[string][]string, 0)  // Промежуточная мапа для элементов, распределенных по множествам (значения по ключу могут повторяться (условие, что каждый эл-т в мн-ве - уникальный, может не выполняться))
-	keys := make(map[string][]int, 0) // Промежуточная мапа для позиций элементов одного множества в исходном массиве
-	res := make(map[string][]string, 0) // Результирующая мапа, где все анаграммы распределены по соответствующим множествам
-	setsNames := make([]string, 0)
+	tempMap := make(map[string][]string, 0)   // Промежуточная мапа для элементов, распределенных по множествам (значения по ключу могут повторяться (условие, что каждый эл-т в мн-ве - уникальный, может не выполняться))
+	elemPosition := make(map[string][]int, 0) // Промежуточная мапа для хранения позиций элементов каждого из множеств в исходном массиве
+	res := make(map[string][]string, 0)       // Результирующая мапа, где все анаграммы распределены по соответствующим множествам, нет дубляжей, а названия этих множеств (ключи) - первые встретившиеся слова, принадлежащие соответствующим множествам
+	tempSetnames := make([]string, 0)
 	// Если в исходном массиве будут попадаться слова, являющиеся анаграммами по отношению друг к другу (то есть в отсортированном по буквам виде эти слова будут представлять одинаковые значения),
 	// мы добавим их (и их индексы в исходном массиве) по одному и тому же ключу в мапу (пятак, пятка и тяпка будут добавлены в мапу (в слайс строк) по ключу "акптя")
 	for i, v := range arr { // Перебираем слова
-		charBase := SortCharsInWord(v) // Сортируем каждое слово по буквам
-		fmt.Println(charBase)
-		keys[charBase] = append(keys[charBase], i) // Добавляем в мапу (в слайс интов) элемент по ключу.
-		bucket[charBase] = append(bucket[charBase], v)
+		sortedWord := SortCharsInWord(v) // Сортируем слово по буквам
+		fmt.Println(sortedWord)
+		elemPosition[sortedWord] = append(elemPosition[sortedWord], i) // Добавляем в мапу (в слайс интов) элемент (индекс данного слова в исходном массиве) по ключу - этому слову в отсортированном виде
+		tempMap[sortedWord] = append(tempMap[sortedWord], v)
 		// На этом этапе слова уже распределены по множествам, но:
-		// 1. В каждом из множеств могут встречаться повторения
+		// 1. В каждом из множеств могут встречаться повторения. (используем CreateSet, чтобы устранить это)
 		// 2. Ключи пока - наборы букв из этих анаграмм, а не первое встретившееся в словаре слово из множества
 	}
 
-	for k, _ := range bucket { // Добавляем ключи в слайс строк
+	for k, _ := range tempMap { // Перебираем ключи временной мапы ("акптя" и т. д.)...
 		fmt.Println("k:", k)
-		setsNames = append(setsNames, k)
+		tempSetnames = append(tempSetnames, k) // ...добавляем их в слайс строк
 	}
 
-	for _, setName := range setsNames {
-		min := keys[setName][0] // Находим для 1-го элемента из одного из сформированных множеств его позицию в исходном массиве строк ("первый встретившийся" из условия)
-		res[(arr)[min]] = BuiltSet(bucket[setName]) // BuiltSet вернёт слайс уникальных значений, его мы запишем в мапу по ключу, являющемуся первым встретившимся словом из данного множества
+	for _, setName := range tempSetnames {
+		firstOne := elemPosition[setName][0]             // Находим для 1-го элемента из одного из сформированных множеств его позицию в исходном массиве строк ("первый встретившийся" из условия)
+		res[arr[firstOne]] = CreateSet(tempMap[setName]) // CreateSet вернёт слайс уникальных значений, его мы запишем в мапу по ключу, являющемуся первым встретившимся словом из данного множества
+		// Причём ключами в получившейся мапе будут значения из исходного массива (словаря) с сохранённым регистром
 	}
 
 	return res

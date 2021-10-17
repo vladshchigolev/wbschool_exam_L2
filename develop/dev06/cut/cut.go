@@ -8,26 +8,23 @@ import (
 )
 
 var (
-	errDataNotProvided = errors.New("Вы ничего не написали (ни одного столбца)")
+	errDataNotProvided      = errors.New("Вы ничего не написали (ни одного столбца)")
 	errInvalidFieldPosition = errors.New("Какие-то (или все) номера полей, указанные для вывода, не существуют")
 )
 
 // ManCut ...
 type ManCut struct {
-	//isDelimeterHandlerDone bool
-	//isSeparatedHandlerDone bool
-	//isFieldsHandlerDone    bool
-	manager                *managers.ConsoleManager
-	options                Options // Поле options содержит меняющиеся параметры (те, что могут устанавливаться с помощью флагов), используем композицию для добавления необходимых полей
-	data                   []string // входные данные
-	result                 []string // результат работы программы
-	delimeter              string // значение разделителя
-	onlySeparated          bool // только строки с разделителем
+	manager *managers.ConsoleManager
+	options Options  // Поле options содержит меняющиеся параметры (те, что могут устанавливаться с помощью флагов), используем композицию для добавления необходимых полей
+	data    []string // входные данные
+	result  []string // результат работы программы
+	//delimeter              string // значение разделителя
+	//onlySeparated          bool // только строки с разделителем
 }
 
 // New ...
 func New(manager *managers.ConsoleManager) *ManCut { // Конструктор, создаёт новое значение ManCut и возвращает указатель на него,
-	return &ManCut{							 // при этом на вход New принимает значение типа, соответствующего типу ConsoleMananger
+	return &ManCut{ // при этом на вход New принимает значение типа, соответствующего типу ConsoleMananger
 		manager: manager, // Инициализируется ненулевым значением только поле manager
 	}
 }
@@ -35,7 +32,7 @@ func New(manager *managers.ConsoleManager) *ManCut { // Конструктор, 
 // Метод объекта ManCut (*ManCut) - ApplyOptions
 // Здесь сначала инициализируем структуру Options дефолтными значениями, затем передаём его функциям типа Option, изменяющим один из 3-х параметров КАЖДАЯ
 func (m *ManCut) ApplyOptions(options ...Option) *ManCut { // ApplyOptions принимает слайс функций с сигнатурой "func(*Options) error" ...
-	opts := GetDefaultOptions() // Возвращает структуру Options, инициализированную по дефолту, присваиваем это значение opts
+	opts := GetDefaultOptions()   // Возвращает структуру Options, инициализированную по дефолту, присваиваем это значение opts
 	for _, opt := range options { // Каждой ф-ции, что лежит в слайсе нужно дать на вход указатель на структуру Option
 		if opt != nil { // Проверяем значение opt на каждой итерации на равенство nil, если не nil, вызываем функцию с параметром типа *Options (указателем на структуру)
 			if err := opt(&opts); err != nil { // ...а затем вызывает эти функции в цикле, передавая им указатель на структуру Options (заполненную дефолтными значениями), созданную в строке 36
@@ -80,7 +77,7 @@ func SelectFields(m *ManCut) {
 
 		var prepared []string
 		for _, fieldID := range m.options.fields { // Перебираем номера столбцов, которые нужно вывести...
-			if fieldID > len(samples) - 1 { // Если какие-то из номеров полей, указанные пользователем, не существуют, завершаемся с ошибкой
+			if fieldID > len(samples)-1 { // Если какие-то из номеров полей, указанные пользователем, не существуют, завершаемся с ошибкой
 				log.Fatal(errInvalidFieldPosition)
 			}
 			prepared = append(prepared, samples[fieldID]) // ...и заполняем новый слайс элементами с нужным индексом из слайса samples

@@ -1,12 +1,11 @@
 package main
 
 import (
+	"dev11/apiserver"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
-
-	"dev11/apiserver"
 )
 
 var (
@@ -34,7 +33,7 @@ func main() {
 	}
 	// Инициализация сервера (создание экземпляра APIServer)
 	s := apiserver.New(config)
-	if err := s.Start(); err != nil {
+	if err := s.Start(); err != nil { // Запуск http-сервера
 		log.Fatal(err)
 	}
 }

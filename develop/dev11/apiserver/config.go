@@ -9,7 +9,7 @@ type Config struct {
 // NewConfig ...
 func NewConfig() *Config {
 	return &Config{
-		BindAddr: ":8000",
-		LogFile:  "apiserver.log",
+		BindAddr: ":8080",
+		LogFile:  "data.log",
 	}
 }

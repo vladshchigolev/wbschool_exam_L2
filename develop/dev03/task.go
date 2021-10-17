@@ -26,17 +26,20 @@
 package main
 
 import (
-"flag"
-"fmt"
-"io/ioutil"
-"log"
-"os"
-"reflect"
-"sort"
-"strconv"
-"strings"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
 )
 
+// Утилита sort сортирует строки текстового файла
+// По умолчанию сортировка осуществляется по всей строке,
+// при желании можно разбить каждую строку по разделителю на столбцы и отсортировать строки по выбранному столбцу
 func main() {
 	sortByColumn := flag.Int("k", -1, "Указание колонки для сортировки") // По умолчанию сортируем по всей строке
 	sortByNumbers := flag.Bool("n", false, "Сортировать по числовому значению")
@@ -47,7 +50,7 @@ func main() {
 	flag.Parse()
 
 	fileName := os.Args[len(os.Args)-1] // Имя файла будет последним аргументом
-	path, err := os.Getwd() // Получаем текущую рабочую директорию
+	path, err := os.Getwd()             // Получаем текущую рабочую директорию
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,12 +65,14 @@ func main() {
 	print(result)
 }
 
+// Sort принимает в качестве аргументов: содержимое файла в виде строкового значения, набор "конфигурационных" переменных,
+// значения которых установлены с помощью флагов
 func Sort(data string, sortByColumn int, sortByNumbers, sortReverse, noDuplicates, ignoreEndSpace, checkSort bool) []string {
-	if checkSort { // Проверяем, отсортированы ли данные
-		result := strings.Split(data, "\n") // Разделяем исходное строковое значение по "\n", наполняем слайс строк
-		sorted := strings.Split(data, "\n") // Делаем то же самое, только это слайс мы отсортируем
-		sort.Strings(sorted) // Один из слайсов отсортируем
-		if reflect.DeepEqual(result, sorted) { // Сравним отсортированный с несортированным, если они равны, то:
+	if checkSort { // Если checkSort == true, проверяем, отсортированы ли данные
+		result := strings.Split(data, "\n")    // Разделяем исходное строковое значение по "\n", наполняем слайс строк
+		sorted := strings.Split(data, "\n")    // Делаем то же самое, только это слайс мы отсортируем
+		sort.Strings(sorted)                   // Один из одинаковых слайсов отсортируем
+		if reflect.DeepEqual(result, sorted) { // Сравним отсортированный с таким же, но несортированным, и если они равны, то:
 			fmt.Println("sorted")
 		} else { // Иначе:
 			fmt.Println("unsorted")
@@ -77,7 +82,7 @@ func Sort(data string, sortByColumn int, sortByNumbers, sortReverse, noDuplicate
 	if ignoreEndSpace {
 		data = strings.TrimSpace(data) // Режем хвостовые пробелы
 	}
-	result := strings.Split(data, "\n") // Разделяем исходное строковое значение по "\n", наполняем слайс строк
+	result := strings.Split(data, "\n") // Разделяем содержимое файла по "\n", на отдельные строки (т. к. именно их мы и будем сортировать), наполняем ими слайс
 	if sortByColumn >= -1 {
 		result = columnSort(result, sortByColumn)
 	}
@@ -93,18 +98,18 @@ func Sort(data string, sortByColumn int, sortByNumbers, sortReverse, noDuplicate
 		}
 	}
 	if sortByNumbers {
-		nums := make([]int, 0, len(result))
-		if checkSort {
+		nums := make([]int, 0, len(result)) // Создаём слайс целых чисел с cap равной количеству строк для сортировки
+		if checkSort {                      // Проверяет, отсортировано ли содержимое файла
 			if !sort.IntsAreSorted(nums) {
 				return []string{"Need to sort"}
 			} else {
 				return []string{"No need to sort"}
 			}
 		}
-		for k := range result {
+		for k := range result { // Перебираем индексы строк
 			n, err := strconv.Atoi(result[k])
 			if err != nil {
-				fmt.Println("error sort numeric:", err)
+				fmt.Println("error sorting by number:", err)
 				os.Exit(1)
 			}
 			nums = append(nums, n)

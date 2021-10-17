@@ -2,7 +2,7 @@ package apiserver
 
 import "net/http"
 
-// responseWriter ...
+// Тип responseWriter будет удовлетворять интерфейсу ResponseWriter
 type responseWriter struct {
 	http.ResponseWriter
 	code int

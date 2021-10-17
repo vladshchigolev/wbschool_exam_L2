@@ -26,10 +26,13 @@ var (
 
 // APIServer ...
 type APIServer struct {
-	config *Config // Указатель на значение структурного типа Config. Значения полей могут быть установлены по умолчанию (при создании конструктором), могут быть получены из json-файла
-	logger *log.Logger // logging object, каждый вызов метода Write io.Writer'а делает единственную операцию записи в журнал
-	router *http.ServeMux // HTTP-мультиплексор, используется для выбора обработчика запроса.
-	store  *store.Store // Структура Store хранит все ивенты
+	config *Config        // Указатель на значение структурного типа Config. Значения полей могут быть установлены по умолчанию (при создании конструктором), могут быть получены из json-файла
+	logger *log.Logger    // logging object, каждый вызов метода Write io.Writer'а делает единственную операцию записи в журнал
+	router *http.ServeMux // request router (HTTP-мультиплексор), используется для выбора обработчика запроса.
+	// Почему указатель? Метод ServeHTTP имеет в качестве получателя *http.ServeMux
+	// ServeMux - это одна из реализаций интерфейса Handler (Имеет метод ServeHTTP(ResponseWriter, *Request))
+	store *store.Store // Структура Store хранит все ивенты, кроме того, в нее встроен тип Repository, который
+	// реализует поведение Create/Update/Delete Event
 }
 
 // New - конструктор объекта APIServer. Возвращает указатель на созданный экземпляр
@@ -56,16 +59,16 @@ func (s *APIServer) Start() error {
 	s.logger.Println("хранилище успешно сконфигурировано")
 
 	r := s.configureRouter()
-	s.logger.Println("HTTP-мультиплексор успешно сконфигурирован")
+	s.logger.Println("request router успешно сконфигурирован")
 
 	s.logger.Println("запуск api-сервера на порту:", s.config.BindAddr)
-	return http.ListenAndServe(s.config.BindAddr, r)
+	return http.ListenAndServe(s.config.BindAddr, r) // Запуск http-сервера
 }
 
 func (s *APIServer) configureLogger() error {
-	// os.OpenFile открывает файл, а если файла нет, то создает его. Она принимает три параметра:
+	// os.OpenFile открывает файл, а если файла нет, то создает его. Она принимает три аргумента:
 	// путь к файлу, режим открытия файла (для чтения, для записи и т.д.), разрешения для доступа к файлу
-	file, err := os.OpenFile(s.config.LogFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	file, err := os.OpenFile(s.config.LogFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666) // -rw-rw-rw-
 	if err != nil {
 		return err
 	}
@@ -95,7 +98,11 @@ func (s *APIServer) configureRouter() http.Handler {
 	s.router.HandleFunc("/events_for_day", s.handleGetForDay())
 	s.router.HandleFunc("/events_for_week", s.handleGetForWeek())
 	s.router.HandleFunc("/events_for_month", s.handleGetForMonth())
-	// Ф-ция вернёт значение ServeMux, обёрнутое logMiddleware
+	// logMiddleware принимает в качестве параметра значение (ServeMux), реализующее интерфейс Handler.
+	// Возвращает значение, реализующее интерфейс Handler, но это уже функция.
+	// При вызове ListenAndServe мы передаем ей в качестве 2-го аргумента эту функцию.
+	// В результате каждый входящий http-запрос будет провоцировать вызов метода ServeHTTP этого второго аргумента ListenAndServe
+	// logMiddleware является чем-то вроде функции-обёртки
 	return s.logMiddleware(s.router)
 }
 
@@ -311,12 +318,14 @@ func (s *APIServer) handleGetForMonth() http.HandlerFunc {
 		s.error(w, r, http.StatusBadRequest, errBadRequestByMethod)
 	}
 }
+
 // Метод error что-то вроде частного случая метода respond (или обёртка над ним)
 // Метод error вызывает метод respond у того же получателя, но с определенными значениями параметров, в частности, код состояния будет соответствовать какой-либо ошибке.
 // Также формат возвращённого клиенту json будет отличаться: в json-объекте будет одна пара "ключ-значение", ключ - строка "error", значение - строковое описание ошибки
 func (s *APIServer) error(w http.ResponseWriter, r *http.Request, code int, err error) {
 	s.respond(w, r, code, map[string]string{"error": err.Error()})
 }
+
 // respond возвращает ответ клиенту в формате json
 func (s *APIServer) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	w.WriteHeader(code) // Отправляет заголовок ответа HTTP с предоставленным кодом состояния
@@ -362,6 +371,7 @@ func (s *APIServer) decodeFormUpdate(form url.Values) (*models.EventRequest, err
 	eventR.Info = sliceInfo[0]
 	return eventR, nil
 }
+
 // decodeFormCreate осуществляет парсинг параметров метода /create_event
 // decodeFormCreate принимает на вход форму из запроса (мапу), содержащую значения параметров метода /create_event,
 // затем заполняет новое значение структурного типа EventRequest значениями этих параметров

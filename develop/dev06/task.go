@@ -28,7 +28,7 @@ var (
 	help        bool
 )
 
-func init() {
+func init() { // init() запускается сразу же после импорта пакета, используется при необходимости инициализации приложения в определенном состоянии
 	flag.StringVar(&fields, "f", "", "Выбрать поля (колонки). Целые положительные числа, через запятую в кавычках")
 	flag.StringVar(&delimeter, "d", "\t", "Использовать другой разделитель")
 	flag.BoolVar(&isSeparated, "s", false, "Выводить только строки с разделителем")
@@ -67,7 +67,7 @@ func main() {
 	}
 
 	newCut := cut.New(conManager).ApplyOptions(options...) // Создаём новый экземпляр ManCut, передаем ему менеджера, применяем нужные опции (вызываем все функции из слайса)
-	if err := newCut.Cut(); err != nil { // Здесь собственно и вызываем метод "Cut" типа ManCut
+	if err := newCut.Cut(); err != nil {                   // Здесь собственно и вызываем метод "Cut" типа ManCut
 		log.Fatal(err)
 	}
 
