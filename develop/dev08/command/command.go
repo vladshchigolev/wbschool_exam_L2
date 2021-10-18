@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	// ShellTerminalPrefix ...
+
 	ShellTerminalPrefix = `vlad@shell:`
-	// ShellExitCommand ...
+
 	ShellExitCommand   = `\exit`
-	errConsoleInput    = errors.New("shell: can not read data")
-	errPromptBuildFail = errors.New("shell: can not get current directory place")
-	errBadUser         = errors.New("shell: can not get current user info")
+	errConsoleInput    = errors.New("shell: чтение не удалось")
+	errPromptBuildFail = errors.New("shell: не удалось определить текущую директорию")
+	errBadUser         = errors.New("shell: не удалось получить информацию о текущем пользователе")
 	successExitMessage = "shell: exit successful"
 )
 
@@ -54,7 +54,7 @@ func (s *ShellTerminal) Start() error {
 			break
 		}
 		args := strings.Fields(text) // Разделяет строку на подстроки по следующим разделителям: '\t', '\n', '\v', '\f', '\r', ' ', U+0085 (NEL), U+00A0 (NBSP)
-		s.shell.SetArgs(args)
+		s.shell.SetArgs(args) // В зависимости от того, какую команду ввёл пользователь, выполняем соответствующий блок case
 		switch args[0] {
 		case "cd":
 			cdExecutor := &shell.CDExecutor{}
@@ -71,11 +71,9 @@ func (s *ShellTerminal) Start() error {
 		case "kill":
 			killExecutor := &shell.KillProcessExecutor{}
 			s.shell.SetExecutor(killExecutor)
-		//case "fork":
-		//	forkExecutor := &shell.ForkExecutor{}
-		//	s.shell.SetExecutor(forkExecutor)
+
 		default:
-			fmt.Fprintln(s.writer, "shell: unknown command")
+			fmt.Fprintln(s.writer, "shell: неизвестная команда")
 		}
 		res, err := s.shell.Start()
 		if err != nil {

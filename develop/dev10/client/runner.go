@@ -11,7 +11,6 @@ import (
 
 const (
 	normalExitMsg = "telnet: осуществляется выход...."
-	//endOfFileExitMsg = "telnet: recieved EOF"
 )
 
 // Runner ...
