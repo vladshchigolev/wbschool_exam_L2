@@ -17,8 +17,8 @@ import "fmt"
 // стоимость оплаты и тип операции. Фасад управляет дальнейшей коммуникацией между различными компонентами
 // без контакта клиента со сложными внутренними механизмами.
 type walletFacade struct {
-	account      *account
-	wallet       *wallet
+	account      *account // Внутри фасада находятся различные компоненты, к которым у клиента нет прямого доступа,
+	wallet       *wallet // вместо этого - упрощенный интерфейс взаимодействия с ними
 	securityCode *securityCode
 	notification *notification
 	ledger       *ledger
@@ -36,7 +36,7 @@ func newWalletFacade(accountID string, code int) *walletFacade {
 	fmt.Println("Account created")
 	return walletFacacde
 }
-
+// У кошелька простой интерфейс - 1. метод для пополнения счёта, 2. метод для списания суммы со счёта
 func (w *walletFacade) addMoneyToWallet(accountID string, securityCode int, amount int) error {
 	fmt.Println("Starting add money to wallet")
 	err := w.account.checkAccount(accountID)
